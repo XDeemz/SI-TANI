@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Konfigurasi Agen AI (agar tidak ikut ter-push ke GitHub)
+/.agents
+/.gemini
+/.antigravity
+
+# File sistem operasi (macOS / Windows)
+.DS_Store
+Thumbs.db
