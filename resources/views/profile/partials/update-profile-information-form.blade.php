@@ -1,11 +1,11 @@
 <section>
     <header>
         <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
+            {{ __('Informasi Profil') }}
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ __('Perbarui data profil, nomor telepon/WhatsApp, dan informasi rekening/instruksi pembayaran Anda.') }}
         </p>
     </header>
 
@@ -18,7 +18,7 @@
         @method('patch')
 
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" :value="__('Nama Lengkap')" />
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
@@ -47,8 +47,22 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="phone" :value="__('Nomor Telepon / WhatsApp')" />
+            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" placeholder="Contoh: 081234567890" autocomplete="tel" />
+            <p class="mt-1 text-xs text-gray-500">Nomor ini digunakan untuk koordinasi transaksi antara Petani dan Pedagang.</p>
+            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+        </div>
+
+        <div>
+            <x-input-label for="payment_info" :value="__('Informasi Rekening / Instruksi Pembayaran (QRIS / Bank)')" />
+            <textarea id="payment_info" name="payment_info" rows="3" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm" placeholder="Contoh: Transfer Bank Mandiri 123-456-7890 a.n. Budi Santoso atau scan QRIS saat serah terima">{{ old('payment_info', $user->payment_info) }}</textarea>
+            <p class="mt-1 text-xs text-gray-500">Informasi ini akan ditampilkan pada tab rekapitulasi dan nota ketika Anda bertindak sebagai Petani penerima pembayaran.</p>
+            <x-input-error class="mt-2" :messages="$errors->get('payment_info')" />
+        </div>
+
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>{{ __('Simpan') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')
                 <p
@@ -57,7 +71,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
                     class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
+                >{{ __('Tersimpan.') }}</p>
             @endif
         </div>
     </form>

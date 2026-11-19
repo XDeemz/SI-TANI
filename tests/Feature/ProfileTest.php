@@ -30,6 +30,8 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
+                'phone' => '081234567890',
+                'payment_info' => 'Transfer BCA 1234567890 a/n Test User',
             ]);
 
         $response
@@ -40,7 +42,35 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
+        $this->assertSame('081234567890', $user->phone);
+        $this->assertSame('Transfer BCA 1234567890 a/n Test User', $user->payment_info);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_phone_and_payment_info_can_be_nullable(): void
+    {
+        $user = User::factory()->create([
+            'phone' => '081234567890',
+            'payment_info' => 'Transfer Mandiri 987654321',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => null,
+                'payment_info' => null,
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $user->refresh();
+
+        $this->assertNull($user->phone);
+        $this->assertNull($user->payment_info);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
