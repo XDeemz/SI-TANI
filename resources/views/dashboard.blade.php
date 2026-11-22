@@ -106,7 +106,7 @@
                         {{-- Panel Content --}}
                         <div class="p-6 space-y-4">
                             {{-- Komoditas Saya --}}
-                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition">
+                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/30 hover:border-emerald-200 transition">
                                 <div class="flex items-center justify-between mb-1">
                                     <h4 class="font-semibold text-gray-900 text-sm flex items-center gap-2">
                                         <span>🌾 Komoditas Saya</span>
@@ -115,9 +115,17 @@
                                         {{ $farmerStats['my_commodities_count'] }} Terdaftar
                                     </span>
                                 </div>
-                                <p class="text-xs text-gray-500">
+                                <p class="text-xs text-gray-500 mb-3">
                                     Daftar komoditas agrikultur milik Anda beserta status ketersediaan dan sisa kapasitas harian.
                                 </p>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('farmer.commodities.index') }}" class="inline-flex items-center text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-100/70 hover:bg-emerald-200/70 px-2.5 py-1.5 rounded-md transition">
+                                        Buka Komoditas Saya &rarr;
+                                    </a>
+                                    <a href="{{ route('farmer.commodities.create') }}" class="inline-flex items-center text-xs font-medium text-gray-600 hover:text-emerald-700 bg-white border border-gray-200 px-2.5 py-1.5 rounded-md transition">
+                                        + Tambah Baru
+                                    </a>
+                                </div>
                             </div>
 
                             {{-- Tawaran Masuk --}}
