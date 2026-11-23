@@ -9,7 +9,7 @@ use App\Models\User;
 class CommodityOfferPolicy
 {
     /**
-     * Tentukan apakah pengguna dapat melihat daftar tawarannya sendiri.
+     * Tentukan apakah pengguna dapat melihat daftar tawaran.
      */
     public function viewAny(User $user): bool
     {
@@ -43,6 +43,26 @@ class CommodityOfferPolicy
     public function delete(User $user, CommodityOffer $offer): bool
     {
         return (int) $offer->trader_id === (int) $user->id
+            && $offer->status === 'pending';
+    }
+
+    /**
+     * Tentukan apakah petani pemilik komoditas dapat menyetujui tawaran masuk.
+     * Hanya petani pemilik komoditas dan hanya jika tawaran masih 'pending'.
+     */
+    public function accept(User $user, CommodityOffer $offer): bool
+    {
+        return (int) $offer->commodity->farmer_id === (int) $user->id
+            && $offer->status === 'pending';
+    }
+
+    /**
+     * Tentukan apakah petani pemilik komoditas dapat menolak tawaran masuk.
+     * Hanya petani pemilik komoditas dan hanya jika tawaran masih 'pending'.
+     */
+    public function reject(User $user, CommodityOffer $offer): bool
+    {
+        return (int) $offer->commodity->farmer_id === (int) $user->id
             && $offer->status === 'pending';
     }
 }

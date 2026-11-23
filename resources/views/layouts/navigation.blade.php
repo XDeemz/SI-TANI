@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('farmer.commodities.index')" :active="request()->routeIs('farmer.commodities.*')">
                         {{ __('Komoditas Saya') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('farmer.offers.index')" :active="request()->routeIs('farmer.offers.*')">
+                        {{ __('Tawaran Masuk') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('trader.commodities.index')" :active="request()->routeIs('trader.commodities.*')">
                         {{ __('Cari Komoditas') }}
                     </x-nav-link>
@@ -81,6 +84,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('farmer.commodities.index')" :active="request()->routeIs('farmer.commodities.*')">
                 {{ __('Komoditas Saya') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('farmer.offers.index')" :active="request()->routeIs('farmer.offers.*')">
+                {{ __('Tawaran Masuk') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('trader.commodities.index')" :active="request()->routeIs('trader.commodities.*')">
                 {{ __('Cari Komoditas') }}

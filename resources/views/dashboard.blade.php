@@ -129,7 +129,7 @@
                             </div>
 
                             {{-- Tawaran Masuk --}}
-                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition">
+                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/30 hover:border-emerald-200 transition">
                                 <div class="flex items-center justify-between mb-1">
                                     <h4 class="font-semibold text-gray-900 text-sm flex items-center gap-2">
                                         <span>📥 Tawaran Masuk</span>
@@ -138,9 +138,12 @@
                                         {{ $farmerStats['pending_offers_count'] }} Menunggu
                                     </span>
                                 </div>
-                                <p class="text-xs text-gray-500">
+                                <p class="text-xs text-gray-500 mb-3">
                                     Penawaran estimasi kapasitas harian dan harga dari pedagang yang membutuhkan persetujuan Anda.
                                 </p>
+                                <a href="{{ route('farmer.offers.index') }}" class="inline-flex items-center text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-100/70 hover:bg-emerald-200/70 px-2.5 py-1.5 rounded-md transition">
+                                    Tinjau Tawaran Masuk &rarr;
+                                </a>
                             </div>
                         </div>
                     </div>
