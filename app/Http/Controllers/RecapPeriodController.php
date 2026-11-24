@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RecapPeriod;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -55,5 +56,38 @@ class RecapPeriodController extends Controller
         $isFarmer = (int) $user->id === (int) $recapPeriod->farmer_id;
 
         return view('recap-periods.show', compact('recapPeriod', 'isTrader', 'isFarmer'));
+    }
+
+    /**
+     * Mulai periode rekap oleh pedagang (ready -> active).
+     */
+    public function start(RecapPeriod $recapPeriod): RedirectResponse
+    {
+        $this->authorize('start', $recapPeriod);
+
+        $recapPeriod->update([
+            'status' => 'active',
+            'started_at' => now(),
+        ]);
+
+        return back()->with('success', 'Periode rekapitulasi berhasil dimulai. Anda kini dapat mencatat baris setoran panen harian.');
+    }
+
+    /**
+     * Akhiri periode rekap oleh pedagang dan hitung total akumulasi tagihan (active -> closed).
+     */
+    public function close(RecapPeriod $recapPeriod): RedirectResponse
+    {
+        $this->authorize('close', $recapPeriod);
+
+        $totalAmount = round((float) $recapPeriod->recapItems()->sum('subtotal'), 2);
+
+        $recapPeriod->update([
+            'status' => 'closed',
+            'ended_at' => now(),
+            'total_amount' => $totalAmount,
+        ]);
+
+        return back()->with('success', 'Periode rekapitulasi berhasil diakhiri dan dikunci. Total tagihan akhir sebesar Rp ' . number_format($totalAmount, 2, ',', '.') . ' telah difinalisasi.');
     }
 }

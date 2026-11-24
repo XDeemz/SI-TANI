@@ -196,9 +196,9 @@
                 </div>
             </div>
 
-            {{-- Area Kontrol Siklus Periode (F-08 & F-11 - Disiapkan untuk Sesi 3.2 & 3.4) --}}
+            {{-- Area Kontrol Siklus Periode (F-08 & F-11) --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                         <h3 class="font-bold text-base text-gray-900 flex items-center gap-2">
                             <span>⏱️ Kontrol Siklus Periode Rekap</span>
@@ -206,32 +206,130 @@
                         <p class="text-xs text-gray-500 mt-0.5">
                             Alur status transaksi: <strong class="text-gray-700">Siap Dimulai</strong> &rarr; <strong class="text-gray-700">Aktif</strong> &rarr; <strong class="text-gray-700">Menunggu Pembayaran</strong> &rarr; <strong class="text-gray-700">Lunas / Selesai</strong>.
                         </p>
+                        @if ($recapPeriod->started_at || $recapPeriod->ended_at)
+                            <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-600">
+                                @if ($recapPeriod->started_at)
+                                    <span class="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md">
+                                        <span class="text-gray-500">▶️ Waktu Mulai:</span>
+                                        <span class="font-semibold text-gray-800">{{ $recapPeriod->started_at->translatedFormat('d M Y, H:i') }}</span>
+                                    </span>
+                                @endif
+                                @if ($recapPeriod->ended_at)
+                                    <span class="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md">
+                                        <span class="text-gray-500">⏹️ Waktu Berakhir:</span>
+                                        <span class="font-semibold text-gray-800">{{ $recapPeriod->ended_at->translatedFormat('d M Y, H:i') }}</span>
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
-                    {{-- Placeholder Kontrol Siklus --}}
-                    <div class="flex items-center gap-2">
-                        @if ($recapPeriod->status === 'ready')
-                            <div class="px-3.5 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                                <span>Periode Siap Dimulai (Kontrol aktif pada Sesi 3.2)</span>
-                            </div>
-                        @elseif ($recapPeriod->status === 'active')
-                            <div class="px-3.5 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>Periode Aktif Berjalan (Pencatatan Sheet Diizinkan)</span>
-                            </div>
-                        @elseif ($recapPeriod->status === 'closed')
-                            <div class="px-3.5 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                <span>Rekap Terkunci — Menunggu Pelunasan</span>
-                            </div>
-                        @elseif ($recapPeriod->status === 'paid')
-                            <div class="px-3.5 py-2 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-xs font-semibold flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                </svg>
-                                <span>Transaksi Selesai & Lunas</span>
-                            </div>
+                    {{-- Kontrol Aksi Transisi Status --}}
+                    <div>
+                        @if ($isTrader)
+                            {{-- KONTROL KHUSUS PEDAGANG (TEMA INDIGO) --}}
+                            @if ($recapPeriod->status === 'ready')
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                    <div class="text-xs text-gray-500 max-w-xs text-left sm:text-right">
+                                        Mulai periode saat setoran pertama masuk, atau mulai lalu langsung akhiri jika ingin membatalkan kesepakatan.
+                                    </div>
+                                    <form action="{{ route('rekap.start', $recapPeriod) }}" method="POST" onsubmit="return confirm('Mulai periode rekapitulasi sekarang? Anda akan dapat mencatat setoran harian pada lembar kerja sheet.');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition shadow-sm gap-2 whitespace-nowrap">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Mulai Periode
+                                        </button>
+                                    </form>
+                                </div>
+                            @elseif ($recapPeriod->status === 'active')
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                    <div class="text-xs text-gray-500 max-w-xs text-left sm:text-right">
+                                        Akhiri periode ketika seluruh rangkaian setoran panen selesai. Tindakan ini memfinalisasi total tagihan dan mengunci tabel rekap secara permanen.
+                                    </div>
+                                    <form action="{{ route('rekap.close', $recapPeriod) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengakhiri periode rekapitulasi? Seluruh baris rekap harian akan dikunci permanen dan total tagihan akan difinalisasi.');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700 transition shadow-sm gap-2 whitespace-nowrap">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                            </svg>
+                                            Akhiri Periode
+                                        </button>
+                                    </form>
+                                </div>
+                            @elseif ($recapPeriod->status === 'closed')
+                                <div class="px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                                    <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        Periode Telah Ditutup & Tabel Rekap Terkunci (Read-Only)
+                                    </div>
+                                    <p class="text-amber-700 mt-0.5">
+                                        Total tagihan telah difinalisasi. Menunggu konfirmasi pelunasan oleh petani mitra.
+                                    </p>
+                                </div>
+                            @elseif ($recapPeriod->status === 'paid')
+                                <div class="px-4 py-2.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-900 text-xs">
+                                    <div class="font-bold flex items-center gap-1.5 text-purple-800">
+                                        <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Transaksi Selesai & Lunas
+                                    </div>
+                                    <p class="text-purple-700 mt-0.5">
+                                        Kapasitas komoditas yang terkunci telah dikembalikan secara otomatis.
+                                    </p>
+                                </div>
+                            @endif
+                        @else
+                            {{-- TAMPILAN UNTUK PETANI (TEMA EMERALD - READ-ONLY) --}}
+                            @if ($recapPeriod->status === 'ready')
+                                <div class="px-4 py-2.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs">
+                                    <div class="font-semibold flex items-center gap-1.5 text-blue-800">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        Status: Siap Dimulai
+                                    </div>
+                                    <p class="text-blue-700 mt-0.5">
+                                        Menunggu pedagang mitra memulai periode rekap saat pasokan hasil panen pertama siap dikirim.
+                                    </p>
+                                </div>
+                            @elseif ($recapPeriod->status === 'active')
+                                <div class="px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+                                    <div class="font-semibold flex items-center gap-1.5 text-emerald-800">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Status: Periode Aktif Berjalan
+                                    </div>
+                                    <p class="text-emerald-700 mt-0.5">
+                                        Pedagang sedang aktif mencatat setoran harian. Anda dapat memantau realisasi bobot dan subtotal secara transparan.
+                                    </p>
+                                </div>
+                            @elseif ($recapPeriod->status === 'closed')
+                                <div class="px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                                    <div class="font-semibold flex items-center gap-1.5 text-amber-800">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        Status: Menunggu Pembayaran
+                                    </div>
+                                    <p class="text-amber-700 mt-0.5">
+                                        Pedagang telah mengakhiri periode dan tabel rekap terkunci. Anda dapat mengonfirmasi pelunasan setelah dana diterima.
+                                    </p>
+                                </div>
+                            @elseif ($recapPeriod->status === 'paid')
+                                <div class="px-4 py-2.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-900 text-xs">
+                                    <div class="font-semibold flex items-center gap-1.5 text-purple-800">
+                                        <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Status: Transaksi Lunas / Selesai
+                                    </div>
+                                    <p class="text-purple-700 mt-0.5">
+                                        Pembayaran telah lunas dan kuota kapasitas komoditas telah dikembalikan.
+                                    </p>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>

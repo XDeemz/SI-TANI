@@ -124,6 +124,11 @@
                                             <span class="text-xs text-gray-500 font-medium">
                                                 Satuan: {{ $period->commodity->unit }}
                                             </span>
+                                            @if ($period->started_at)
+                                                <div class="text-[11px] text-gray-400 mt-0.5">
+                                                    Dimulai: {{ $period->started_at->translatedFormat('d M Y') }}
+                                                </div>
+                                            @endif
                                         </div>
 
                                         {{-- Badge Status Periode & Pembayaran --}}
@@ -254,6 +259,11 @@
                                             <span class="text-xs text-gray-500 font-medium">
                                                 Satuan: {{ $period->commodity->unit }}
                                             </span>
+                                            @if ($period->started_at)
+                                                <div class="text-[11px] text-gray-400 mt-0.5">
+                                                    Dimulai: {{ $period->started_at->translatedFormat('d M Y') }}
+                                                </div>
+                                            @endif
                                         </div>
 
                                         {{-- Badge Status Periode & Pembayaran --}}

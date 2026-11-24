@@ -46,11 +46,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('offers/{offer}', [TraderCommodityOfferController::class, 'destroy'])->name('offers.destroy');
     });
 
-    // Modul Rekapitulasi: Tab Rekap Terpisah per Pasangan (F-07)
+    // Modul Rekapitulasi: Tab Rekap Terpisah per Pasangan (F-07) & Siklus Periode (F-08)
     Route::get('/rekap', [RecapPeriodController::class, 'index'])->name('rekap.index');
     Route::get('/rekap/{recapPeriod}', [RecapPeriodController::class, 'show'])->name('rekap.show');
+    Route::match(['patch', 'post'], '/rekap/{recapPeriod}/start', [RecapPeriodController::class, 'start'])->name('rekap.start');
+    Route::match(['patch', 'post'], '/rekap/{recapPeriod}/close', [RecapPeriodController::class, 'close'])->name('rekap.close');
+
     Route::get('/recap-periods', [RecapPeriodController::class, 'index'])->name('recap-periods.index');
     Route::get('/recap-periods/{recapPeriod}', [RecapPeriodController::class, 'show'])->name('recap-periods.show');
+    Route::match(['patch', 'post'], '/recap-periods/{recapPeriod}/start', [RecapPeriodController::class, 'start'])->name('recap-periods.start');
+    Route::match(['patch', 'post'], '/recap-periods/{recapPeriod}/close', [RecapPeriodController::class, 'close'])->name('recap-periods.close');
 });
 
 require __DIR__.'/auth.php';

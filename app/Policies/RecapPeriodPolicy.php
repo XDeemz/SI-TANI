@@ -24,4 +24,24 @@ class RecapPeriodPolicy
         return (int) $user->id === (int) $recapPeriod->farmer_id
             || (int) $user->id === (int) $recapPeriod->trader_id;
     }
+
+    /**
+     * Tentukan apakah pedagang dapat memulai periode rekap (ready -> active).
+     * Hanya pedagang terkait (trader_id) dan hanya jika status masih 'ready'.
+     */
+    public function start(User $user, RecapPeriod $recapPeriod): bool
+    {
+        return (int) $user->id === (int) $recapPeriod->trader_id
+            && $recapPeriod->status === 'ready';
+    }
+
+    /**
+     * Tentukan apakah pedagang dapat mengakhiri periode rekap (active -> closed).
+     * Hanya pedagang terkait (trader_id) dan hanya jika status masih 'active'.
+     */
+    public function close(User $user, RecapPeriod $recapPeriod): bool
+    {
+        return (int) $user->id === (int) $recapPeriod->trader_id
+            && $recapPeriod->status === 'active';
+    }
 }
