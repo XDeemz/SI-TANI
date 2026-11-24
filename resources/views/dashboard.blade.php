@@ -145,6 +145,24 @@
                                     Tinjau Tawaran Masuk &rarr;
                                 </a>
                             </div>
+
+                            {{-- Rekap Aktif Petani --}}
+                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/30 hover:border-emerald-200 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <h4 class="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                                        <span>📊 Rekap Aktif</span>
+                                    </h4>
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                                        {{ $farmerStats['active_recaps_count'] }} Berjalan
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-3">
+                                    Pantau realisasi setoran harian dan akumulasi tagihan dari pedagang mitra secara transparan.
+                                </p>
+                                <a href="{{ route('rekap.index') }}" class="inline-flex items-center text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-100/70 hover:bg-emerald-200/70 px-2.5 py-1.5 rounded-md transition">
+                                    Buka Ruang Rekap &rarr;
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -219,7 +237,7 @@
                             </div>
 
                             {{-- Rekap Aktif --}}
-                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition">
+                            <div class="p-4 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-indigo-50/30 hover:border-indigo-200 transition">
                                 <div class="flex items-center justify-between mb-1">
                                     <h4 class="font-semibold text-gray-900 text-sm flex items-center gap-2">
                                         <span>📊 Rekap Aktif</span>
@@ -228,9 +246,12 @@
                                         {{ $traderStats['active_recaps_count'] }} Berjalan
                                     </span>
                                 </div>
-                                <p class="text-xs text-gray-500">
+                                <p class="text-xs text-gray-500 mb-3">
                                     Ruang pencatatan harian bertahap bergaya lembar kerja (*sheet*) untuk kontrak panen yang sedang berlangsung.
                                 </p>
+                                <a href="{{ route('rekap.index') }}" class="inline-flex items-center text-xs font-semibold text-indigo-700 hover:text-indigo-900 bg-indigo-100/70 hover:bg-indigo-200/70 px-2.5 py-1.5 rounded-md transition">
+                                    Buka Ruang Rekap &rarr;
+                                </a>
                             </div>
                         </div>
                     </div>

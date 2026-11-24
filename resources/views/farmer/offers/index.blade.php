@@ -420,9 +420,16 @@
                                                     </div>
                                                 </div>
                                             @elseif ($offer->status === 'approved')
-                                                <span class="text-xs font-semibold text-emerald-700">
-                                                    Kontrak Aktif
-                                                </span>
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <span class="text-xs font-semibold text-emerald-700">
+                                                        Kontrak Aktif
+                                                    </span>
+                                                    @if ($offer->recapPeriod)
+                                                        <a href="{{ route('rekap.show', $offer->recapPeriod) }}" class="inline-flex items-center px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-md text-xs font-semibold transition" title="Buka ruang rekapitulasi">
+                                                            Buka Ruang Rekap &rarr;
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             @else
                                                 <span class="text-xs text-gray-400">
                                                     Telah Ditolak

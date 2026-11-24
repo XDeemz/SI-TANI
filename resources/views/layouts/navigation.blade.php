@@ -27,6 +27,9 @@
                     <x-nav-link :href="route('trader.offers.index')" :active="request()->routeIs('trader.offers.*')">
                         {{ __('Tawaran Saya') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('rekap.index')" :active="request()->routeIs('rekap.*') || request()->routeIs('recap-periods.*')">
+                        {{ __('Rekap Kontrak') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -93,6 +96,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('trader.offers.index')" :active="request()->routeIs('trader.offers.*')">
                 {{ __('Tawaran Saya') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('rekap.index')" :active="request()->routeIs('rekap.*') || request()->routeIs('recap-periods.*')">
+                {{ __('Rekap Kontrak') }}
             </x-responsive-nav-link>
         </div>
 

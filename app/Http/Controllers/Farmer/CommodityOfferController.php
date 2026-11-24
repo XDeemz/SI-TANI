@@ -22,7 +22,7 @@ class CommodityOfferController extends Controller
         $user = $request->user();
         $farmerCommodityIds = $user->commodities()->pluck('id');
 
-        $query = CommodityOffer::with(['commodity', 'trader'])
+        $query = CommodityOffer::with(['commodity', 'trader', 'recapPeriod'])
             ->whereIn('commodity_id', $farmerCommodityIds);
 
         if ($request->filled('status')) {

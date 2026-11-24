@@ -20,7 +20,7 @@ class CommodityOfferController extends Controller
     {
         $offers = $request->user()
             ->offers()
-            ->with(['commodity.farmer'])
+            ->with(['commodity.farmer', 'recapPeriod'])
             ->latest()
             ->paginate(10);
 

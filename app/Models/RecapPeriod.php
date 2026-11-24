@@ -54,6 +54,14 @@ class RecapPeriod extends Model
     }
 
     /**
+     * Alias untuk tawaran komoditas acuan (commodityOffer).
+     */
+    public function commodityOffer(): BelongsTo
+    {
+        return $this->belongsTo(CommodityOffer::class, 'commodity_offer_id');
+    }
+
+    /**
      * Komoditas terkait.
      */
     public function commodity(): BelongsTo

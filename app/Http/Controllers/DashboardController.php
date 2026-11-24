@@ -25,6 +25,9 @@ class DashboardController extends Controller
             'pending_offers_count' => CommodityOffer::whereIn('commodity_id', $user->commodities()->select('id'))
                 ->where('status', 'pending')
                 ->count(),
+            'active_recaps_count' => $user->farmerRecapPeriods()
+                ->where('status', 'active')
+                ->count(),
         ];
 
         // Ringkasan aktivitas kontekstual Pedagang (komoditas milik pengguna lain)

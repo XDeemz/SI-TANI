@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Farmer\CommodityController as FarmerCommodityController;
 use App\Http\Controllers\Farmer\CommodityOfferController as FarmerCommodityOfferController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RecapPeriodController;
 use App\Http\Controllers\Trader\CommodityCatalogController as TraderCommodityCatalogController;
 use App\Http\Controllers\Trader\CommodityOfferController as TraderCommodityOfferController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('offers', [TraderCommodityOfferController::class, 'index'])->name('offers.index');
         Route::delete('offers/{offer}', [TraderCommodityOfferController::class, 'destroy'])->name('offers.destroy');
     });
+
+    // Modul Rekapitulasi: Tab Rekap Terpisah per Pasangan (F-07)
+    Route::get('/rekap', [RecapPeriodController::class, 'index'])->name('rekap.index');
+    Route::get('/rekap/{recapPeriod}', [RecapPeriodController::class, 'show'])->name('rekap.show');
+    Route::get('/recap-periods', [RecapPeriodController::class, 'index'])->name('recap-periods.index');
+    Route::get('/recap-periods/{recapPeriod}', [RecapPeriodController::class, 'show'])->name('recap-periods.show');
 });
 
 require __DIR__.'/auth.php';

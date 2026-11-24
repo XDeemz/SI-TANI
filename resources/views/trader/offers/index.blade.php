@@ -160,6 +160,10 @@
                                                         Batalkan
                                                     </button>
                                                 </form>
+                                            @elseif ($offer->status === 'approved' && $offer->recapPeriod)
+                                                <a href="{{ route('rekap.show', $offer->recapPeriod) }}" class="inline-flex items-center px-2.5 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md text-xs font-semibold transition" title="Buka ruang rekapitulasi">
+                                                    Buka Ruang Rekap &rarr;
+                                                </a>
                                             @else
                                                 <span class="text-xs text-gray-400">-</span>
                                             @endif
