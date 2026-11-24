@@ -314,14 +314,17 @@ class FarmerOfferManagementTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $response = $this->actingAs($farmer)->patch("/farmer/offers/{$offer->id}/reject");
+        $response = $this->actingAs($farmer)->patch("/farmer/offers/{$offer->id}/reject", [
+            'farmer_notes' => 'Harga penawaran terlalu rendah di bawah estimasi modal panen.',
+        ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        // Status berubah menjadi rejected
+        // Status berubah menjadi rejected dan alasan tersimpan
         $offer->refresh();
         $this->assertSame('rejected', $offer->status);
+        $this->assertSame('Harga penawaran terlalu rendah di bawah estimasi modal panen.', $offer->farmer_notes);
         $this->assertNotNull($offer->responded_at);
 
         // Kapasitas komoditas tidak berkurang
@@ -332,6 +335,82 @@ class FarmerOfferManagementTest extends TestCase
         $this->assertDatabaseMissing('recap_periods', [
             'commodity_offer_id' => $offer->id,
         ]);
+    }
+
+    public function test_farmer_can_accept_offer_with_farmer_notes_and_stored_in_database(): void
+    {
+        $farmer = User::factory()->create();
+        $trader = User::factory()->create();
+
+        $commodity = Commodity::create([
+            'farmer_id' => $farmer->id,
+            'name' => 'Kacang Kedelai Unggul',
+            'unit' => 'kg',
+            'initial_daily_capacity' => 100.00,
+            'remaining_daily_capacity' => 100.00,
+            'estimated_harvest_date' => now()->addDays(7)->toDateString(),
+            'status' => 'open',
+        ]);
+
+        $offer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 30.00,
+            'offered_price' => 15000.00,
+            'status' => 'pending',
+        ]);
+
+        $notes = 'Pengiriman perdana dapat dimulai hari Senin pagi.';
+        $response = $this->actingAs($farmer)->patch("/farmer/offers/{$offer->id}/accept", [
+            'farmer_notes' => $notes,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $offer->refresh();
+        $this->assertSame('approved', $offer->status);
+        $this->assertSame($notes, $offer->farmer_notes);
+        $this->assertDatabaseHas('commodity_offers', [
+            'id' => $offer->id,
+            'status' => 'approved',
+            'farmer_notes' => $notes,
+        ]);
+    }
+
+    public function test_farmer_fails_to_reject_offer_if_farmer_notes_is_empty(): void
+    {
+        $farmer = User::factory()->create();
+        $trader = User::factory()->create();
+
+        $commodity = Commodity::create([
+            'farmer_id' => $farmer->id,
+            'name' => 'Bawang Daun',
+            'unit' => 'kg',
+            'initial_daily_capacity' => 50.00,
+            'remaining_daily_capacity' => 50.00,
+            'estimated_harvest_date' => now()->addDays(5)->toDateString(),
+            'status' => 'open',
+        ]);
+
+        $offer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 15.00,
+            'offered_price' => 12000.00,
+            'status' => 'pending',
+        ]);
+
+        // Coba tolak tanpa menyertakan farmer_notes
+        $response = $this->actingAs($farmer)->patch("/farmer/offers/{$offer->id}/reject", [
+            'farmer_notes' => '',
+        ]);
+
+        $response->assertSessionHasErrors('farmer_notes');
+
+        $offer->refresh();
+        $this->assertSame('pending', $offer->status);
+        $this->assertNull($offer->farmer_notes);
     }
 
     public function test_already_processed_offer_cannot_be_processed_again(): void
@@ -376,5 +455,49 @@ class FarmerOfferManagementTest extends TestCase
         $this->actingAs($farmer)->patch("/farmer/offers/{$rejectedOffer->id}/accept")->assertForbidden();
         // Coba tolak kembali tawaran yang sudah rejected -> 403 Forbidden
         $this->actingAs($farmer)->patch("/farmer/offers/{$rejectedOffer->id}/reject")->assertForbidden();
+    }
+
+    public function test_farmer_can_view_farmer_notes_on_processed_offers(): void
+    {
+        $farmer = User::factory()->create();
+        $trader = User::factory()->create();
+
+        $commodity = Commodity::create([
+            'farmer_id' => $farmer->id,
+            'name' => 'Wortel Organik',
+            'unit' => 'kg',
+            'initial_daily_capacity' => 100,
+            'remaining_daily_capacity' => 100,
+            'estimated_harvest_date' => now()->addDays(10)->toDateString(),
+            'status' => 'open',
+        ]);
+
+        $approvedOffer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 30,
+            'offered_price' => 15000,
+            'status' => 'approved',
+            'farmer_notes' => 'Catatan: Pasokan siap dikirim tiap subuh.',
+            'responded_at' => now(),
+        ]);
+
+        $rejectedOffer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 20,
+            'offered_price' => 10000,
+            'status' => 'rejected',
+            'farmer_notes' => 'Alasan: Penawaran harga di bawah estimasi modal panen.',
+            'responded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($farmer)->get('/farmer/offers');
+
+        $response->assertOk();
+        $response->assertSeeText('Catatan: Pasokan siap dikirim tiap subuh.');
+        $response->assertSeeText('Catatan Petani:');
+        $response->assertSeeText('Alasan: Penawaran harga di bawah estimasi modal panen.');
+        $response->assertSeeText('Alasan Penolakan Petani:');
     }
 }

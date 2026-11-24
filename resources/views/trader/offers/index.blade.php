@@ -89,7 +89,7 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach ($offers as $offer)
                                     <tr class="hover:bg-gray-50/80 transition">
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-6 py-4 whitespace-normal max-w-sm">
                                             <div class="font-bold text-gray-900">
                                                 {{ $offer->commodity->name }}
                                             </div>
@@ -99,6 +99,31 @@
                                                     <span>&bull; {{ $offer->commodity->farmer->phone }}</span>
                                                 @endif
                                             </div>
+
+                                            {{-- Kotak Informasi Catatan / Alasan dari Petani --}}
+                                            @if ($offer->farmer_notes && in_array($offer->status, ['approved', 'rejected']))
+                                                @if ($offer->status === 'approved')
+                                                    <div class="mt-2.5 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 shadow-xs">
+                                                        <div class="font-semibold text-emerald-800 flex items-center gap-1.5 mb-0.5">
+                                                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Catatan dari Petani:
+                                                        </div>
+                                                        <p class="text-emerald-950 mt-1 whitespace-pre-line leading-relaxed">{{ $offer->farmer_notes }}</p>
+                                                    </div>
+                                                @else
+                                                    <div class="mt-2.5 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-900 shadow-xs">
+                                                        <div class="font-semibold text-rose-800 flex items-center gap-1.5 mb-0.5">
+                                                            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Alasan Penolakan dari Petani:
+                                                        </div>
+                                                        <p class="text-rose-950 mt-1 whitespace-pre-line leading-relaxed">{{ $offer->farmer_notes }}</p>
+                                                    </div>
+                                                @endif
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
                                             {{ number_format($offer->offered_daily_capacity, 2, ',', '.') }} {{ $offer->commodity->unit }}/hari

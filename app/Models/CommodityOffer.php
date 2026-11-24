@@ -22,6 +22,7 @@ class CommodityOffer extends Model
         'offered_daily_capacity',
         'offered_price',
         'status',
+        'farmer_notes',
         'responded_at',
     ];
 

@@ -55,6 +55,11 @@ Aplikasi web ini menjembatani **Petani** dan **Pedagang** dalam kesepakatan kont
   - **Pengembalian Kapasitas Saat Transaksi Selesai:** Ketika suatu transaksi selesai (`recap_periods.status` menjadi `paid` / `Selesai`—termasuk skenario pembatalan kesepakatan di mana pedagang langsung memulai lalu mengakhiri periode dengan nilai `0` dan petani menandai selesai), sistem otomatis **mengembalikan kapasitas yang terkunci** (`locked_capacity`) ke `commodities.remaining_daily_capacity`:
     $$\text{remaining\_daily\_capacity}_{\text{baru}} = \min(\text{initial\_daily\_capacity},\; \text{remaining\_daily\_capacity}_{\text{lama}} + \text{locked\_capacity})$$
   - Setiap tawaran yang berstatus `approved` otomatis membuat satu entitas `recap_periods` khusus untuk pasangan `(1 Petani – 1 Pedagang)` tersebut.
+- **F-06b Catatan & Alasan Keputusan Tawaran (Petani):**
+  - Petani dapat menyertakan pesan/keterangan (`farmer_notes`) saat merespons tawaran dari pedagang:
+    - **Saat Menerima Tawaran (`accept`):** Input keterangan bersifat opsional (`nullable|string|max:1000`) yang dapat digunakan untuk catatan pengiriman, koordinasi awal, atau jadwal mulai pasokan.
+    - **Saat Menolak Tawaran (`reject`):** Input alasan penolakan bersifat wajib diisi (`required|string|max:1000`) agar pedagang mengetahui alasan penolakan tawaran secara transparan (misal harga belum sesuai, kendala kuota, dsb.).
+  - Pesan `farmer_notes` disimpan pada tabel `commodity_offers` dan ditampilkan pada halaman tawaran masuk petani serta pemantauan tawaran pedagang.
 
 ### Modul C: Periode & Pencatatan Rekap Harian (Tampilan Sheet)
 
@@ -132,6 +137,7 @@ users (id, name, email, phone, payment_info, password)
    - `offered_daily_capacity`: `decimal(10, 2)`
    - `offered_price`: `decimal(15, 2)`
    - `status`: `enum('pending', 'approved', 'rejected')` (default `'pending'`)
+   - `farmer_notes`: `text` (nullable, catatan koordinasi penerimaan atau alasan penolakan dari petani)
    - `responded_at`: `timestamp` (nullable)
    - `timestamps`
 
@@ -181,15 +187,20 @@ users (id, name, email, phone, payment_info, password)
 
 ### 5.2 Aturan Validasi & Transaksi Database
 
-1. **Persetujuan Tawaran (`commodity_offers.status`: `pending` $\rightarrow$ `approved`):**
+1. **Persetujuan & Penolakan Tawaran (`commodity_offers.status`: `pending` $\rightarrow$ `approved` / `rejected`):**
    - Hanya `farmer_id` pemilik `commodity` yang boleh mengubah status dari `pending` ke `approved` atau `rejected`.
-   - Saat diubah ke `approved` (gunakan `DB::transaction` + `lockForUpdate()` pada record `commodity`):
-     1. Update `commodity_offers.status = 'approved'` dan `responded_at = now()`.
-     2. Hitung kapasitas yang benar-benar dikunci:
-        `$locked = min((float) $commodity->remaining_daily_capacity, (float) $offer->offered_daily_capacity);`
-     3. Kurangi sisa kapasitas komoditas (minimal `0`):
-        `$commodity->remaining_daily_capacity = max(0, round((float) $commodity->remaining_daily_capacity - (float) $offer->offered_daily_capacity, 2));`
-     4. Buat record baru pada `recap_periods` dengan `status = 'ready'` dan `locked_capacity = $locked`.
+   - **Saat Disetujui (`accept`):**
+     - Menerima input opsional `farmer_notes` (`nullable|string|max:1000`).
+     - Gunakan `DB::transaction` + `lockForUpdate()` pada record `commodity`:
+       1. Update `commodity_offers.status = 'approved'`, `farmer_notes = $validated['farmer_notes'] ?? null`, dan `responded_at = now()`.
+       2. Hitung kapasitas yang benar-benar dikunci:
+          `$locked = min((float) $commodity->remaining_daily_capacity, (float) $offer->offered_daily_capacity);`
+       3. Kurangi sisa kapasitas komoditas (minimal `0`):
+          `$commodity->remaining_daily_capacity = max(0, round((float) $commodity->remaining_daily_capacity - (float) $offer->offered_daily_capacity, 2));`
+       4. Buat record baru pada `recap_periods` dengan `status = 'ready'` dan `locked_capacity = $locked`.
+   - **Saat Ditolak (`reject`):**
+     - Wajib menerima input alasan penolakan `farmer_notes` (`required|string|max:1000`).
+     - Update `commodity_offers.status = 'rejected'`, `farmer_notes = $validated['farmer_notes']`, dan `responded_at = now()`. Kapasitas komoditas tidak berkurang dan tidak membuat `recap_periods`.
 
 2. **Transisi Status `recap_periods`:**
    - `ready` $\rightarrow$ `active`: Hanya dapat dilakukan oleh `trader_id` (`started_at = now()`).

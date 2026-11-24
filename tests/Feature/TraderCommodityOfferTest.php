@@ -466,4 +466,90 @@ class TraderCommodityOfferTest extends TestCase
 
         $this->assertDatabaseHas('commodity_offers', ['id' => $offer->id]);
     }
+
+    public function test_trader_can_see_farmer_notes_on_accepted_and_rejected_offers(): void
+    {
+        $farmer = User::factory()->create(['name' => 'Petani Subur']);
+        $trader = User::factory()->create();
+
+        $commodity = Commodity::create([
+            'farmer_id' => $farmer->id,
+            'name' => 'Kangkung Hidroponik',
+            'unit' => 'ikat',
+            'initial_daily_capacity' => 150,
+            'remaining_daily_capacity' => 100,
+            'estimated_harvest_date' => now()->addDays(3)->toDateString(),
+            'status' => 'open',
+        ]);
+
+        $acceptedOffer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 30,
+            'offered_price' => 2500,
+            'status' => 'approved',
+            'farmer_notes' => 'Tawaran diterima. Pengiriman pagi jam 06.00.',
+            'responded_at' => now(),
+        ]);
+
+        $rejectedOffer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 20,
+            'offered_price' => 1500,
+            'status' => 'rejected',
+            'farmer_notes' => 'Maaf, harga penawaran belum memenuhi biaya operasional.',
+            'responded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($trader)->get('/trader/offers');
+
+        $response->assertOk();
+        $response->assertSeeText('Tawaran diterima. Pengiriman pagi jam 06.00.');
+        $response->assertSeeText('Catatan dari Petani:');
+        $response->assertSeeText('Maaf, harga penawaran belum memenuhi biaya operasional.');
+        $response->assertSeeText('Alasan Penolakan dari Petani:');
+    }
+
+    public function test_farmer_rejects_offer_with_farmer_notes_and_it_displays_on_trader_offers_page(): void
+    {
+        $farmer = User::factory()->create(['name' => 'Pak Tani']);
+        $trader = User::factory()->create(['name' => 'Bu Pedagang']);
+
+        $commodity = Commodity::create([
+            'farmer_id' => $farmer->id,
+            'name' => 'Bayam Merah',
+            'unit' => 'ikat',
+            'initial_daily_capacity' => 80,
+            'remaining_daily_capacity' => 80,
+            'estimated_harvest_date' => now()->addDays(4)->toDateString(),
+            'status' => 'open',
+        ]);
+
+        $offer = CommodityOffer::create([
+            'commodity_id' => $commodity->id,
+            'trader_id' => $trader->id,
+            'offered_daily_capacity' => 25,
+            'offered_price' => 3000,
+            'status' => 'pending',
+        ]);
+
+        $rejectionReason = 'Kapasitas harian untuk varietas ini sudah dipesan mitra lain.';
+
+        // Petani menolak tawaran dengan alasan farmer_notes
+        $rejectResponse = $this->actingAs($farmer)->patch("/farmer/offers/{$offer->id}/reject", [
+            'farmer_notes' => $rejectionReason,
+        ]);
+        $rejectResponse->assertRedirect();
+
+        $offer->refresh();
+        $this->assertSame('rejected', $offer->status);
+        $this->assertSame($rejectionReason, $offer->farmer_notes);
+
+        // Pedagang membuka halaman tawaran saya dan melihat alasan penolakan
+        $traderResponse = $this->actingAs($trader)->get('/trader/offers');
+        $traderResponse->assertOk();
+        $traderResponse->assertSeeText($rejectionReason);
+        $traderResponse->assertSeeText('Alasan Penolakan dari Petani:');
+    }
 }

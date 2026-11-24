@@ -48,7 +48,11 @@ class CommodityOfferController extends Controller
     {
         Gate::authorize('accept', $offer);
 
-        return DB::transaction(function () use ($offer) {
+        $validated = $request->validate([
+            'farmer_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        return DB::transaction(function () use ($offer, $validated) {
             // Kunci baris komoditas dengan lockForUpdate untuk mencegah race condition / overbooking
             $commodity = Commodity::where('id', $offer->commodity_id)->lockForUpdate()->first();
 
@@ -79,6 +83,7 @@ class CommodityOfferController extends Controller
             // Ubah status tawaran menjadi approved
             $offer->update([
                 'status' => 'approved',
+                'farmer_notes' => $validated['farmer_notes'] ?? null,
                 'responded_at' => now(),
             ]);
 
@@ -107,8 +112,13 @@ class CommodityOfferController extends Controller
     {
         Gate::authorize('reject', $offer);
 
+        $validated = $request->validate([
+            'farmer_notes' => ['required', 'string', 'max:1000'],
+        ]);
+
         $offer->update([
             'status' => 'rejected',
+            'farmer_notes' => $validated['farmer_notes'],
             'responded_at' => now(),
         ]);
 
