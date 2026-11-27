@@ -46,6 +46,28 @@ class RecapPeriod extends Model
     }
 
     /**
+     * Format nominal angka ke format Rupiah dengan 2 angka di belakang koma.
+     */
+    public static function formatRupiah(float|int|string|null $amount): string
+    {
+        return 'Rp ' . number_format((float) $amount, 2, ',', '.');
+    }
+
+    /**
+     * Label status periode/pembayaran dalam Bahasa Indonesia.
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'ready' => 'Siap Dimulai',
+            'active' => 'Aktif',
+            'closed' => 'Menunggu Pembayaran',
+            'paid' => 'Lunas / Selesai',
+            default => (string) $this->status,
+        };
+    }
+
+    /**
      * Tawaran komoditas acuan pembentukan periode rekap ini.
      */
     public function offer(): BelongsTo

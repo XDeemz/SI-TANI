@@ -93,23 +93,23 @@
                             @if ($recapPeriod->status === 'ready')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
-                                    Siap Dimulai
+                                    {{ $recapPeriod->statusLabel() }}
                                 </span>
                             @elseif ($recapPeriod->status === 'active')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                                    Aktif
+                                    {{ $recapPeriod->statusLabel() }}
                                 </span>
                             @elseif ($recapPeriod->status === 'closed')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                                    Menunggu Pembayaran
+                                    {{ $recapPeriod->statusLabel() }}
                                 </span>
                             @elseif ($recapPeriod->status === 'paid')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
                                     <svg class="w-3.5 h-3.5 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    Lunas / Selesai
+                                    {{ $recapPeriod->statusLabel() }}
                                 </span>
                             @endif
                         </div>
@@ -138,7 +138,7 @@
                         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-center min-w-[160px]">
                             <span class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider block">Total Akumulasi</span>
                             <span class="text-base font-extrabold text-emerald-800 mt-1 block">
-                                Rp {{ number_format($recapPeriod->total_amount, 2, ',', '.') }}
+                                {{ $formattedTotalAmount }}
                             </span>
                         </div>
                     </div>
@@ -184,9 +184,9 @@
                             <div class="text-gray-500">
                                 Kontak: <span class="font-medium text-gray-700">{{ $recapPeriod->trader->phone ?? $recapPeriod->trader->email }}</span>
                             </div>
-                            @if ($recapPeriod->offer)
+                            @if ($recapPeriod->commodityOffer)
                                 <div class="text-gray-500">
-                                    Harga Penawaran Acuan: <span class="font-medium text-emerald-700">Rp {{ number_format($recapPeriod->offer->offered_price, 2, ',', '.') }}/{{ $recapPeriod->commodity->unit }}</span>
+                                    Harga Penawaran Acuan: <span class="font-medium text-emerald-700">{{ $formatRupiah($recapPeriod->commodityOffer->offered_price) }}/{{ $recapPeriod->commodity->unit }}</span>
                                 </div>
                             @endif
                         </div>
@@ -329,6 +329,170 @@
                                 </div>
                             @endif
                         @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Panel Ringkasan Tagihan & Informasi Pembayaran (F-10) --}}
+            <div id="billing-summary-panel" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50/80 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900 flex items-center gap-2">
+                            <span>💳 Ringkasan Tagihan &amp; Informasi Pembayaran</span>
+                        </h3>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Pembayaran dilakukan secara non-integrasi (Tunai / Transfer / QRIS) di luar sistem.
+                        </p>
+                    </div>
+                    <div>
+                        @if ($recapPeriod->status === 'ready')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
+                                {{ $recapPeriod->statusLabel() }}
+                            </span>
+                        @elseif ($recapPeriod->status === 'active')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                                {{ $recapPeriod->statusLabel() }}
+                            </span>
+                        @elseif ($recapPeriod->status === 'closed')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                                {{ $recapPeriod->statusLabel() }}
+                            </span>
+                        @elseif ($recapPeriod->status === 'paid')
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                <svg class="w-3.5 h-3.5 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ $recapPeriod->statusLabel() }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {{-- Kolom Kiri: Akumulasi Total Tagihan & Status Periode/Pembayaran --}}
+                    <div class="rounded-xl border {{ $recapPeriod->status === 'paid' ? 'border-purple-200 bg-purple-50/40' : ($recapPeriod->status === 'closed' ? 'border-amber-200 bg-amber-50/40' : 'border-emerald-200 bg-emerald-50/40') }} p-5 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span class="text-xs font-bold uppercase tracking-wider text-gray-600">
+                                    Akumulasi Total Tagihan
+                                </span>
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded {{ in_array($recapPeriod->status, ['closed', 'paid'], true) ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 border border-gray-200' }}">
+                                    {{ in_array($recapPeriod->status, ['closed', 'paid'], true) ? 'Tagihan Final' : ($recapPeriod->status === 'active' ? 'Estimasi Berjalan' : 'Belum Dimulai') }}
+                                </span>
+                            </div>
+
+                            <div class="text-3xl font-extrabold tracking-tight text-gray-900 mt-1">
+                                {{ $formattedTotalAmount }}
+                            </div>
+
+                            <p class="text-xs text-gray-600 mt-2 leading-relaxed">
+                                @if ($recapPeriod->status === 'ready')
+                                    Periode masih berstatus <strong>Siap Dimulai</strong>. Tagihan akan mulai terakumulasi setelah pedagang memulai periode dan mencatat setoran harian.
+                                @elseif ($recapPeriod->status === 'active')
+                                    Nominal di atas merupakan <strong>estimasi berjalan</strong> dari {{ $recapPeriod->recapItems->count() }} baris realisasi harian. Nilai akhir difinalisasi saat pedagang mengakhiri periode.
+                                @elseif ($recapPeriod->status === 'closed')
+                                    Nominal di atas merupakan <strong>tagihan final</strong> dan tabel rekap telah dikunci. Silakan selesaikan pembayaran non-integrasi sesuai metode pembayaran petani di samping.
+                                @elseif ($recapPeriod->status === 'paid')
+                                    Tagihan final telah dinyatakan <strong>Lunas / Selesai</strong>.
+                                @endif
+                            </p>
+                        </div>
+
+                        <div class="pt-3 border-t border-gray-200/80 text-xs space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500">Status Periode &amp; Pembayaran:</span>
+                                <span class="font-bold text-gray-900">{{ $recapPeriod->statusLabel() }}</span>
+                            </div>
+                            @if ($recapPeriod->ended_at)
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-500">Tanggal Finalisasi Tagihan:</span>
+                                    <span class="font-medium text-gray-800">{{ $recapPeriod->ended_at->translatedFormat('d M Y, H:i') }}</span>
+                                </div>
+                            @endif
+                            @if ($recapPeriod->status === 'paid' && $recapPeriod->paid_at)
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-500">Tanggal Pelunasan:</span>
+                                    <span class="font-semibold text-purple-800">{{ $recapPeriod->paid_at->translatedFormat('d M Y, H:i') }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Kolom Kanan: Informasi Metode Pembayaran Petani (F-02 & F-10) --}}
+                    <div class="rounded-xl border border-gray-200 bg-gray-50/70 p-5 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-xs font-bold uppercase tracking-wider text-gray-700">
+                                    Informasi Metode Pembayaran Petani
+                                </span>
+                                <span class="text-[11px] font-medium px-2 py-0.5 rounded bg-white border border-gray-200 text-gray-600">
+                                    Tunai / Rekening / QRIS
+                                </span>
+                            </div>
+
+                            <div class="space-y-2.5 text-xs">
+                                <div class="flex items-center justify-between pb-2 border-b border-gray-200/70">
+                                    <span class="text-gray-500">Penerima Pembayaran (Petani):</span>
+                                    <span class="font-bold text-gray-900">{{ $recapPeriod->farmer->name }}</span>
+                                </div>
+
+                                <div class="flex items-center justify-between pb-2 border-b border-gray-200/70">
+                                    <span class="text-gray-500">Nomor Telepon / WhatsApp Petani:</span>
+                                    <span class="font-semibold text-gray-800">
+                                        {{ $recapPeriod->farmer->phone ?: 'Belum diisi' }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <span class="text-gray-500 block mb-1.5">Detail Metode &amp; Instruksi Pembayaran:</span>
+                                    @if (filled($recapPeriod->farmer->payment_info))
+                                        <div class="bg-white border border-gray-200 rounded-lg p-3 text-gray-800 font-medium whitespace-pre-line leading-relaxed">{{ $recapPeriod->farmer->payment_info }}</div>
+                                    @else
+                                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-900 leading-relaxed space-y-2">
+                                            <p>
+                                                Informasi pembayaran belum diisi oleh petani. Koordinasikan pembayaran Tunai, transfer rekening, atau QRIS secara langsung melalui kontak petani.
+                                            </p>
+                                            @if ($isFarmer)
+                                                <div>
+                                                    <a href="{{ route('profile.edit') }}" class="inline-flex items-center font-semibold text-emerald-700 hover:text-emerald-900 underline">
+                                                        Lengkapi Informasi Pembayaran di Edit Profil &rarr;
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Slot Aksi Modul D (Persiapan F-11 Konfirmasi Pelunasan & F-12 Lihat Nota) --}}
+                        <div id="billing-action-slot" class="pt-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            @if ($recapPeriod->status === 'closed')
+                                <p class="text-[11px] text-amber-800 font-medium">
+                                    @if ($isFarmer)
+                                        Siap dikonfirmasi lunas setelah pembayaran Tunai / QRIS diterima di luar sistem.
+                                    @else
+                                        Silakan lakukan pembayaran sesuai metode petani dan tunggu konfirmasi pelunasan dari petani.
+                                    @endif
+                                </p>
+                            @elseif ($recapPeriod->status === 'paid')
+                                <p class="text-[11px] text-purple-800 font-medium">
+                                    Pelunasan telah tercatat pada sistem.
+                                </p>
+                            @else
+                                <p class="text-[11px] text-gray-500">
+                                    Aksi konfirmasi pelunasan dan tampilan nota akan aktif setelah periode diakhiri.
+                                </p>
+                            @endif
+
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                {{-- Slot F-11: Tombol "Tandai Lunas / Selesai" khusus Petani saat status === 'closed' --}}
+                                {{-- Slot F-12: Tombol "Lihat Nota" saat status in ['closed', 'paid'] --}}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -485,7 +649,7 @@
                                     step="0.01"
                                     min="0"
                                     x-model="newPrice"
-                                    placeholder="{{ $recapPeriod->offer ? number_format((float) $recapPeriod->offer->offered_price, 0, '', '') : '0' }}"
+                                    placeholder="{{ $recapPeriod->commodityOffer ? number_format((float) $recapPeriod->commodityOffer->offered_price, 0, '', '') : '0' }}"
                                     required
                                     class="w-full rounded-lg border-indigo-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white"
                                 >
@@ -562,10 +726,10 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-gray-700">
-                                        Rp {{ number_format($item->actual_price, 2, ',', '.') }}
+                                        {{ $formatRupiah($item->actual_price) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right font-bold text-emerald-700">
-                                        Rp {{ number_format($item->subtotal, 2, ',', '.') }}
+                                        {{ $formatRupiah($item->subtotal) }}
                                     </td>
                                     <td class="px-6 py-4 text-xs text-gray-500 whitespace-normal">
                                         {{ $item->notes ?: '-' }}
@@ -622,7 +786,7 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">-</td>
                                     <td class="px-6 py-4 text-right text-emerald-800 text-base">
-                                        Rp {{ number_format($recapPeriod->total_amount, 2, ',', '.') }}
+                                        {{ $formattedTotalAmount }}
                                     </td>
                                     <td class="px-6 py-4"></td>
                                     @if ($canManageItems)

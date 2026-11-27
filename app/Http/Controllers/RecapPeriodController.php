@@ -54,8 +54,16 @@ class RecapPeriodController extends Controller
         $user = $request->user();
         $isTrader = (int) $user->id === (int) $recapPeriod->trader_id;
         $isFarmer = (int) $user->id === (int) $recapPeriod->farmer_id;
+        $formatRupiah = fn (float|int|string|null $amount): string => RecapPeriod::formatRupiah($amount);
+        $formattedTotalAmount = RecapPeriod::formatRupiah($recapPeriod->total_amount);
 
-        return view('recap-periods.show', compact('recapPeriod', 'isTrader', 'isFarmer'));
+        return view('recap-periods.show', compact(
+            'recapPeriod',
+            'isTrader',
+            'isFarmer',
+            'formatRupiah',
+            'formattedTotalAmount'
+        ));
     }
 
     /**
@@ -88,6 +96,6 @@ class RecapPeriodController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        return back()->with('success', 'Periode rekapitulasi berhasil diakhiri dan dikunci. Total tagihan akhir sebesar Rp ' . number_format($totalAmount, 2, ',', '.') . ' telah difinalisasi.');
+        return back()->with('success', 'Periode rekapitulasi berhasil diakhiri dan dikunci. Total tagihan akhir sebesar ' . RecapPeriod::formatRupiah($totalAmount) . ' telah difinalisasi.');
     }
 }

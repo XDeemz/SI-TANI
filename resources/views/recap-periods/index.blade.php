@@ -134,25 +134,25 @@
                                         {{-- Badge Status Periode & Pembayaran --}}
                                         <div>
                                             @if ($period->status === 'ready')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" title="Siap Dimulai">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" title="{{ $period->statusLabel() }}">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
-                                                    Siap Dimulai
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @elseif ($period->status === 'active')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800" title="Periode Aktif">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800" title="{{ $period->statusLabel() }}">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                                                    Aktif
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @elseif ($period->status === 'closed')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800" title="Menunggu Pembayaran">
-                                                    Menunggu Pembayaran
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800" title="{{ $period->statusLabel() }}">
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @elseif ($period->status === 'paid')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800" title="Lunas / Selesai">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800" title="{{ $period->statusLabel() }}">
                                                     <svg class="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                                     </svg>
-                                                    Lunas / Selesai
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @endif
                                         </div>
@@ -187,7 +187,7 @@
                                         <div class="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100">
                                             <span class="text-gray-500 block text-[11px]">Total Akumulasi:</span>
                                             <span class="font-bold text-emerald-800 text-sm mt-0.5 block">
-                                                Rp {{ number_format($period->total_amount, 2, ',', '.') }}
+                                                {{ \App\Models\RecapPeriod::formatRupiah($period->total_amount) }}
                                             </span>
                                         </div>
                                     </div>
@@ -269,25 +269,25 @@
                                         {{-- Badge Status Periode & Pembayaran --}}
                                         <div>
                                             @if ($period->status === 'ready')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" title="Siap Dimulai">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" title="{{ $period->statusLabel() }}">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
-                                                    Siap Dimulai
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @elseif ($period->status === 'active')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800" title="Periode Aktif">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800" title="{{ $period->statusLabel() }}">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                                                    Aktif
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @elseif ($period->status === 'closed')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800" title="Menunggu Pembayaran">
-                                                    Menunggu Pembayaran
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800" title="{{ $period->statusLabel() }}">
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @elseif ($period->status === 'paid')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800" title="Lunas / Selesai">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800" title="{{ $period->statusLabel() }}">
                                                     <svg class="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                                     </svg>
-                                                    Lunas / Selesai
+                                                    {{ $period->statusLabel() }}
                                                 </span>
                                             @endif
                                         </div>
@@ -322,7 +322,7 @@
                                         <div class="bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100">
                                             <span class="text-gray-500 block text-[11px]">Total Akumulasi:</span>
                                             <span class="font-bold text-indigo-900 text-sm mt-0.5 block">
-                                                Rp {{ number_format($period->total_amount, 2, ',', '.') }}
+                                                {{ \App\Models\RecapPeriod::formatRupiah($period->total_amount) }}
                                             </span>
                                         </div>
                                     </div>
