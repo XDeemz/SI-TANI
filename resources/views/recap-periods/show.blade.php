@@ -162,11 +162,9 @@
                             <div class="text-gray-500">
                                 Kontak: <span class="font-medium text-gray-700">{{ $recapPeriod->farmer->phone ?? $recapPeriod->farmer->email }}</span>
                             </div>
-                            @if ($recapPeriod->farmer->payment_info)
-                                <div class="text-gray-500">
-                                    Info Bayar: <span class="font-medium text-gray-700">{{ $recapPeriod->farmer->payment_info }}</span>
-                                </div>
-                            @endif
+                            <div class="text-gray-500">
+                                Info Pembayaran: <span class="font-medium text-gray-700">{{ $recapPeriod->farmer->payment_info ?: 'Belum diisi (koordinasi langsung / tunai)' }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -336,7 +334,42 @@
             </div>
 
             {{-- Tabel Riwayat Baris Rekap Harian (F-09 - Sheet View) --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            @php
+                $canManageItems = $isTrader && $recapPeriod->status === 'active';
+                $isEditingOld = (bool) old('_editing_item_id');
+            @endphp
+
+            <div
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                @if ($canManageItems)
+                    x-data="{
+                        newWeight: @js(!$isEditingOld ? old('net_weight', '') : ''),
+                        newPrice: @js(!$isEditingOld ? old('actual_price', '') : ''),
+                        editingId: @js(old('_editing_item_id')),
+                        editDate: @js($isEditingOld ? old('transaction_date', '') : ''),
+                        editWeight: @js($isEditingOld ? old('net_weight', '') : ''),
+                        editPrice: @js($isEditingOld ? old('actual_price', '') : ''),
+                        editNotes: @js($isEditingOld ? old('notes', '') : ''),
+                        editActionTemplate: @js(route('rekap.items.update', [$recapPeriod, '__ITEM__'])),
+                        get editAction() {
+                            return this.editingId ? this.editActionTemplate.replace('__ITEM__', this.editingId) : '#';
+                        },
+                        formatRupiah(value) {
+                            return 'Rp ' + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0);
+                        },
+                        openEdit(id, date, weight, price, notes) {
+                            this.editingId = id;
+                            this.editDate = date;
+                            this.editWeight = weight;
+                            this.editPrice = price;
+                            this.editNotes = notes ?? '';
+                        },
+                        closeEdit() {
+                            this.editingId = null;
+                        }
+                    }"
+                @endif
+            >
                 <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h3 class="font-bold text-lg text-gray-900 flex items-center gap-2">
@@ -346,18 +379,151 @@
                             Daftar kronologis setoran panen dan perhitungan subtotal aktual harian per tanggal transaksi.
                         </p>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-2">
+                        @if ($recapPeriod->status !== 'active')
+                            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                🔒 Sheet Terkunci
+                            </span>
+                        @elseif ($isFarmer)
+                            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                Read-Only
+                            </span>
+                        @endif
                         <span class="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700">
                             {{ $recapPeriod->recapItems->count() }} Baris Catatan
                         </span>
                     </div>
                 </div>
 
+                {{-- Banner Status Penguncian Sheet / Mode Pantau --}}
+                @if ($recapPeriod->status !== 'active')
+                    <div class="px-6 py-3.5 bg-amber-50/70 border-b border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                        <span class="text-base leading-none">🔒</span>
+                        <div>
+                            @if ($recapPeriod->status === 'ready')
+                                <span class="font-bold">Sheet Pencatatan Belum Dibuka (Status: Siap Dimulai).</span>
+                                <span class="text-amber-800">Penambahan, perubahan, dan penghapusan baris rekap dinonaktifkan sampai pedagang memulai periode rekap.</span>
+                            @else
+                                <span class="font-bold">Sheet Rekap Terkunci Permanen (Read-Only).</span>
+                                <span class="text-amber-800">Karena periode sudah berstatus {{ $recapPeriod->status === 'closed' ? 'Menunggu Pembayaran' : 'Lunas / Selesai' }}, seluruh kontrol mutasi baris rekap disembunyikan dan diblokir.</span>
+                            @endif
+                        </div>
+                    </div>
+                @elseif ($isFarmer)
+                    <div class="px-6 py-3.5 bg-emerald-50/70 border-b border-emerald-200 text-xs text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="font-bold">Mode Pantau Petani (Read-Only):</span>
+                            <span>Tabel rekap harian hanya dapat diisi dan diubah oleh pedagang selama periode aktif.</span>
+                        </div>
+                        <div class="text-emerald-800 font-medium">
+                            Referensi Pembayaran Anda: <span class="font-bold">{{ $recapPeriod->farmer->payment_info ?: 'Belum diisi' }}</span>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Formulir Tambah Cepat Bergaya Sheet (Khusus Pedagang saat status === 'active', Tema Indigo) --}}
+                @if ($canManageItems)
+                    <div class="p-6 bg-indigo-50/60 border-b border-indigo-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-indigo-950">Tambah Baris Rekap Harian</h4>
+                                <p class="text-xs text-indigo-800 mt-0.5">
+                                    Tanggal bebas dipilih (fleksibel H+1), maksimal 1 baris per tanggal. Isi bobot bersih <strong class="font-semibold">0</strong> apabila hari libur / tidak ada pengambilan.
+                                </p>
+                            </div>
+                            <div class="bg-white border border-indigo-200 rounded-lg px-3 py-1.5 text-right shrink-0">
+                                <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 block">Pratinjau Subtotal</span>
+                                <span class="text-sm font-extrabold text-indigo-900" x-text="formatRupiah((Number(newWeight) || 0) * (Number(newPrice) || 0))">Rp 0,00</span>
+                            </div>
+                        </div>
+
+                        @if ($errors->any() && !$isEditingOld)
+                            <div class="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+                                <ul class="list-disc list-inside space-y-0.5">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <form action="{{ route('rekap.items.store', $recapPeriod) }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                            @csrf
+                            <div class="lg:col-span-3">
+                                <label for="new_transaction_date" class="block text-xs font-semibold text-indigo-950 mb-1">Tanggal Transaksi</label>
+                                <input
+                                    id="new_transaction_date"
+                                    type="date"
+                                    name="transaction_date"
+                                    value="{{ !$isEditingOld ? old('transaction_date', now()->toDateString()) : now()->toDateString() }}"
+                                    required
+                                    class="w-full rounded-lg border-indigo-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white"
+                                >
+                            </div>
+
+                            <div class="lg:col-span-2">
+                                <label for="new_net_weight" class="block text-xs font-semibold text-indigo-950 mb-1">Bobot ({{ $recapPeriod->commodity->unit }})</label>
+                                <input
+                                    id="new_net_weight"
+                                    type="number"
+                                    name="net_weight"
+                                    step="0.01"
+                                    min="0"
+                                    x-model="newWeight"
+                                    placeholder="0.00"
+                                    required
+                                    class="w-full rounded-lg border-indigo-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white"
+                                >
+                            </div>
+
+                            <div class="lg:col-span-3">
+                                <label for="new_actual_price" class="block text-xs font-semibold text-indigo-950 mb-1">Harga Aktual (Rp)</label>
+                                <input
+                                    id="new_actual_price"
+                                    type="number"
+                                    name="actual_price"
+                                    step="0.01"
+                                    min="0"
+                                    x-model="newPrice"
+                                    placeholder="{{ $recapPeriod->offer ? number_format((float) $recapPeriod->offer->offered_price, 0, '', '') : '0' }}"
+                                    required
+                                    class="w-full rounded-lg border-indigo-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white"
+                                >
+                            </div>
+
+                            <div class="lg:col-span-2">
+                                <label for="new_notes" class="block text-xs font-semibold text-indigo-950 mb-1">Catatan (Opsional)</label>
+                                <input
+                                    id="new_notes"
+                                    type="text"
+                                    name="notes"
+                                    maxlength="255"
+                                    value="{{ !$isEditingOld ? old('notes') : '' }}"
+                                    placeholder="Mis. Libur / kualitas A"
+                                    class="w-full rounded-lg border-indigo-200 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white"
+                                >
+                            </div>
+
+                            <div class="lg:col-span-2">
+                                <button
+                                    type="submit"
+                                    class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition shadow-sm"
+                                >
+                                    + Tambah Baris
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+
                 {{-- Tabel Baris Sheet --}}
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th scope="col" class="px-4 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-14">
+                                    No
+                                </th>
                                 <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Tanggal Transaksi
                                 </th>
@@ -373,16 +539,27 @@
                                 <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Catatan
                                 </th>
+                                @if ($canManageItems)
+                                    <th scope="col" class="px-6 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Aksi
+                                    </th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($recapPeriod->recapItems as $item)
                                 <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="px-4 py-4 whitespace-nowrap text-center text-xs font-semibold text-gray-500">
+                                        {{ $loop->iteration }}
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
                                         {{ \Carbon\Carbon::parse($item->transaction_date)->translatedFormat('d M Y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right font-semibold text-gray-900">
-                                        {{ number_format($item->net_weight, 2, ',', '.') }}
+                                        {{ number_format($item->net_weight, 2, ',', '.') }} {{ $recapPeriod->commodity->unit }}
+                                        @if ((float) $item->net_weight === 0.0)
+                                            <span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-600 rounded">Libur</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-gray-700">
                                         Rp {{ number_format($item->actual_price, 2, ',', '.') }}
@@ -391,12 +568,32 @@
                                         Rp {{ number_format($item->subtotal, 2, ',', '.') }}
                                     </td>
                                     <td class="px-6 py-4 text-xs text-gray-500 whitespace-normal">
-                                        {{ $item->notes ?? '-' }}
+                                        {{ $item->notes ?: '-' }}
                                     </td>
+                                    @if ($canManageItems)
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <div class="inline-flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    @click="openEdit({{ $item->id }}, @js($item->transaction_date->format('Y-m-d')), @js((string) $item->net_weight), @js((string) $item->actual_price), @js($item->notes ?? ''))"
+                                                    class="px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <form action="{{ route('rekap.items.destroy', [$recapPeriod, $item]) }}" method="POST" onsubmit="return confirm('Hapus baris rekap tanggal {{ \Carbon\Carbon::parse($item->transaction_date)->translatedFormat('d M Y') }}? Total tagihan akan diperbarui otomatis.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="{{ $canManageItems ? 7 : 6 }}" class="px-6 py-12 text-center text-gray-500">
                                         <div class="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -404,7 +601,13 @@
                                         </div>
                                         <p class="font-medium text-gray-700 text-sm">Belum ada baris setoran panen tercatat</p>
                                         <p class="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
-                                            Pencatatan realisasi bobot harian dan formulir berbasis sheet akan tersedia secara aktif pada Sesi 3.3.
+                                            @if ($canManageItems)
+                                                Gunakan formulir tambah cepat di atas untuk mencatat setoran panen harian pertama atau hari libur (bobot 0).
+                                            @elseif ($recapPeriod->status === 'ready')
+                                                Baris setoran harian dapat diisi setelah periode rekap dimulai.
+                                            @else
+                                                Tidak ada baris realisasi harian yang tercatat pada periode ini.
+                                            @endif
                                         </p>
                                     </td>
                                 </tr>
@@ -413,7 +616,7 @@
                         @if ($recapPeriod->recapItems->isNotEmpty())
                             <tfoot class="bg-gray-50 font-bold text-gray-900 border-t-2 border-gray-200">
                                 <tr>
-                                    <td class="px-6 py-4">Total</td>
+                                    <td colspan="2" class="px-6 py-4">Total</td>
                                     <td class="px-6 py-4 text-right">
                                         {{ number_format($recapPeriod->recapItems->sum('net_weight'), 2, ',', '.') }} {{ $recapPeriod->commodity->unit }}
                                     </td>
@@ -422,11 +625,114 @@
                                         Rp {{ number_format($recapPeriod->total_amount, 2, ',', '.') }}
                                     </td>
                                     <td class="px-6 py-4"></td>
+                                    @if ($canManageItems)
+                                        <td class="px-6 py-4"></td>
+                                    @endif
                                 </tr>
                             </tfoot>
                         @endif
                     </table>
                 </div>
+
+                {{-- Modal Edit Baris Rekap Harian (Khusus Pedagang saat status === 'active') --}}
+                @if ($canManageItems)
+                    <div
+                        x-show="editingId !== null"
+                        x-cloak
+                        style="display: {{ $isEditingOld ? 'flex' : 'none' }};"
+                        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4"
+                    >
+                        <div @click.away="closeEdit()" class="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-lg overflow-hidden">
+                            <div class="px-6 py-4 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                                <h4 class="font-bold text-base text-indigo-950">Edit Baris Rekap Harian</h4>
+                                <button type="button" @click="closeEdit()" class="text-indigo-500 hover:text-indigo-700 text-sm font-bold">&times;</button>
+                            </div>
+
+                            <form :action="editAction" method="POST" class="p-6 space-y-4">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="_editing_item_id" :value="editingId">
+
+                                @if ($errors->any() && $isEditingOld)
+                                    <div class="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+                                        <ul class="list-disc list-inside space-y-0.5">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
+                                <div>
+                                    <label for="edit_transaction_date" class="block text-xs font-semibold text-gray-700 mb-1">Tanggal Transaksi</label>
+                                    <input
+                                        id="edit_transaction_date"
+                                        type="date"
+                                        name="transaction_date"
+                                        x-model="editDate"
+                                        required
+                                        class="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    >
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="edit_net_weight" class="block text-xs font-semibold text-gray-700 mb-1">Bobot Bersih ({{ $recapPeriod->commodity->unit }})</label>
+                                        <input
+                                            id="edit_net_weight"
+                                            type="number"
+                                            name="net_weight"
+                                            step="0.01"
+                                            min="0"
+                                            x-model="editWeight"
+                                            required
+                                            class="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label for="edit_actual_price" class="block text-xs font-semibold text-gray-700 mb-1">Harga Aktual (Rp)</label>
+                                        <input
+                                            id="edit_actual_price"
+                                            type="number"
+                                            name="actual_price"
+                                            step="0.01"
+                                            min="0"
+                                            x-model="editPrice"
+                                            required
+                                            class="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        >
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="edit_notes" class="block text-xs font-semibold text-gray-700 mb-1">Catatan (Opsional)</label>
+                                    <input
+                                        id="edit_notes"
+                                        type="text"
+                                        name="notes"
+                                        maxlength="255"
+                                        x-model="editNotes"
+                                        class="w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    >
+                                </div>
+
+                                <div class="rounded-lg bg-indigo-50 border border-indigo-100 p-3 flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-indigo-800">Pratinjau Subtotal Baru</span>
+                                    <span class="text-sm font-extrabold text-indigo-950" x-text="formatRupiah((Number(editWeight) || 0) * (Number(editPrice) || 0))">Rp 0,00</span>
+                                </div>
+
+                                <div class="flex items-center justify-end gap-2 pt-2">
+                                    <button type="button" @click="closeEdit()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                        Batal
+                                    </button>
+                                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 shadow-sm">
+                                        Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             </div>
 
         </div>

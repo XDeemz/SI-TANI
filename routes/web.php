@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Farmer\CommodityController as FarmerCommodityController;
 use App\Http\Controllers\Farmer\CommodityOfferController as FarmerCommodityOfferController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RecapItemController;
 use App\Http\Controllers\RecapPeriodController;
 use App\Http\Controllers\Trader\CommodityCatalogController as TraderCommodityCatalogController;
 use App\Http\Controllers\Trader\CommodityOfferController as TraderCommodityOfferController;
@@ -46,16 +47,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('offers/{offer}', [TraderCommodityOfferController::class, 'destroy'])->name('offers.destroy');
     });
 
-    // Modul Rekapitulasi: Tab Rekap Terpisah per Pasangan (F-07) & Siklus Periode (F-08)
+    // Modul Rekapitulasi: Tab Rekap Terpisah per Pasangan (F-07) & Siklus Periode (F-08) & Sheet Harian (F-09)
     Route::get('/rekap', [RecapPeriodController::class, 'index'])->name('rekap.index');
     Route::get('/rekap/{recapPeriod}', [RecapPeriodController::class, 'show'])->name('rekap.show');
     Route::match(['patch', 'post'], '/rekap/{recapPeriod}/start', [RecapPeriodController::class, 'start'])->name('rekap.start');
     Route::match(['patch', 'post'], '/rekap/{recapPeriod}/close', [RecapPeriodController::class, 'close'])->name('rekap.close');
+    Route::post('/rekap/{recapPeriod}/items', [RecapItemController::class, 'store'])->name('rekap.items.store');
+    Route::match(['put', 'patch'], '/rekap/{recapPeriod}/items/{recapItem}', [RecapItemController::class, 'update'])->name('rekap.items.update');
+    Route::delete('/rekap/{recapPeriod}/items/{recapItem}', [RecapItemController::class, 'destroy'])->name('rekap.items.destroy');
 
     Route::get('/recap-periods', [RecapPeriodController::class, 'index'])->name('recap-periods.index');
     Route::get('/recap-periods/{recapPeriod}', [RecapPeriodController::class, 'show'])->name('recap-periods.show');
     Route::match(['patch', 'post'], '/recap-periods/{recapPeriod}/start', [RecapPeriodController::class, 'start'])->name('recap-periods.start');
     Route::match(['patch', 'post'], '/recap-periods/{recapPeriod}/close', [RecapPeriodController::class, 'close'])->name('recap-periods.close');
+    Route::post('/recap-periods/{recapPeriod}/items', [RecapItemController::class, 'store'])->name('recap-periods.items.store');
+    Route::match(['put', 'patch'], '/recap-periods/{recapPeriod}/items/{recapItem}', [RecapItemController::class, 'update'])->name('recap-periods.items.update');
+    Route::delete('/recap-periods/{recapPeriod}/items/{recapItem}', [RecapItemController::class, 'destroy'])->name('recap-periods.items.destroy');
 });
 
 require __DIR__.'/auth.php';
